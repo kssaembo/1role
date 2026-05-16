@@ -1,0 +1,40 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    match /users/{userId} {
+      allow read: if isSignedIn(); // Allow any signed in user to potentially find their teacher record or login
+      allow write: if isOwner(userId);
+
+      match /students/{studentId} {
+        allow read: if true; // Publicly readable for students to pick themselves
+        allow write: if isOwner(userId);
+      }
+
+      match /roles/{roleId} {
+        allow read: if true; // Publicly readable for students to see roles
+        allow write: if isOwner(userId);
+      }
+
+      match /applications/{appId} {
+        allow create: if true; // Students submit applications without auth (identified by name/number)
+        allow read, update, delete: if isOwner(userId);
+      }
+    }
+  }
+}

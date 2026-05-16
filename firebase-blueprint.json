@@ -1,0 +1,77 @@
+{
+  "entities": {
+    "User": {
+      "title": "교사 정보",
+      "description": "교사 및 학급 기본 정보",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "format": "email" },
+        "className": { "type": "string", "description": "학급 명" },
+        "teacherName": { "type": "string", "description": "교사 이름" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email", "className"]
+    },
+    "Student": {
+      "title": "학생 정보",
+      "description": "학급 학생 명단 및 수행 이력",
+      "type": "object",
+      "properties": {
+        "studentNumber": { "type": "number", "description": "번호" },
+        "name": { "type": "string", "description": "이름" },
+        "currentRoleId": { "type": "string", "description": "현재 배정된 역할 ID", "default": "" },
+        "pastRoles": { "type": "array", "description": "누적 수행 역할 이름(또는 ID) 이력", "items": { "type": "string" } }
+      },
+      "required": ["studentNumber", "name"]
+    },
+    "Role": {
+      "title": "1인 1역 정보",
+      "description": "학급 역할 정의 및 정원",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "역할명" },
+        "quota": { "type": "number", "description": "정원" },
+        "description": { "type": "string", "description": "설명" },
+        "reward": { "type": "string", "description": "보상" },
+        "applicantCount": { "type": "number", "description": "현재 신청 인원수", "default": 0 }
+      },
+      "required": ["name", "quota"]
+    },
+    "Application": {
+      "title": "학생 지망 정보",
+      "description": "학생들의 지망 순위 및 다짐",
+      "type": "object",
+      "properties": {
+        "studentId": { "type": "string", "description": "학생 문서 ID" },
+        "preferences": {
+          "type": "array",
+          "description": "지망 순위 (1, 2, 3지망 역할 ID)",
+          "items": { "type": "string" },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "commitment": { "type": "string", "description": "지원 다짐" },
+        "submittedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["studentId", "preferences", "commitment"]
+    }
+  },
+  "firestore": {
+    "users": {
+        "schema": "User",
+        "description": "교사 컬렉션"
+    },
+    "users/{userId}/students": {
+      "schema": "Student",
+      "description": "해당 교사 학급의 학생 명단"
+    },
+    "users/{userId}/roles": {
+      "schema": "Role",
+      "description": "해당 교사 학급의 역할 목록"
+    },
+    "users/{userId}/applications": {
+      "schema": "Application",
+      "description": "해당 교사 학급 학생들의 참여 신청 정보"
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "name": "우리 반 1인 1역 매니저",
+  "description": "초등 학급의 1인 1역을 공정하게 매칭하고 관리하는 서비스입니다. 지망 순위와 수행 이력을 고려한 자동 매칭 알고리즘을 제공합니다.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}

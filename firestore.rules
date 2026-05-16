@@ -1,0 +1,76 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // 1. Users (Teachers)
+    match /users/{userId} {
+      function isValidUser(data) {
+        return data.email is string && data.className is string && data.teacherName is string;
+      }
+
+      allow get: if true; // Publicly fetchable to identify teacher by email or ID
+      allow list: if isSignedIn() || true; // Students search by email
+      allow create: if isOwner(userId) && isValidUser(incoming());
+      allow update: if isOwner(userId) && isValidUser(incoming());
+
+      // 2. Students
+      match /students/{studentId} {
+        function isValidStudent(data) {
+          return data.studentNumber is number && data.name is string;
+        }
+
+        allow read, list: if true; // Publicly readable for students to pick themselves
+        allow create: if isOwner(userId) && isValidStudent(incoming());
+        allow update: if isOwner(userId) && isValidStudent(incoming());
+        allow delete: if isOwner(userId);
+      }
+
+      // 3. Roles
+      match /roles/{roleId} {
+        function isValidRole(data) {
+          return data.name is string && data.quota is number;
+        }
+
+        allow read, list: if true; // Publicly readable for students to see roles
+        allow create: if isOwner(userId) && isValidRole(incoming());
+        allow update: if isOwner(userId) || (isSignedIn() == false && incoming().diff(existing()).affectedKeys().hasOnly(['applicantCount']));
+        allow delete: if isOwner(userId);
+      }
+
+      // 4. Applications
+      match /applications/{appId} {
+        function isValidApplication(data) {
+          return data.studentId is string && data.preferences is list && data.preferences.size() == 3;
+        }
+
+        allow create: if isValidApplication(incoming()); // Anonymous creation allowed for students
+        allow read, list, update, delete: if isOwner(userId);
+      }
+    }
+  }
+}
