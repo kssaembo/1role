@@ -110,22 +110,25 @@ export default function RoleManagement({ userId, roles }: { userId: string, role
 
     try {
       const rows = parseCSV(bulkInput.trim());
+      // Skip the first row (header) if there are multiple rows
+      const dataRows = rows.length > 1 ? rows.slice(1) : rows;
+      
       const batch = writeBatch(db);
       let count = 0;
       
-      rows.forEach((row) => {
+      dataRows.forEach((row) => {
         const [name, quotaRaw, description, reward] = row;
         
-        // Skip header if it equals the preset header string or is empty
-        if (name && name !== '역할명' && quotaRaw) {
+        // Skip empty rows or rows without characters
+        if (name && name.trim() && quotaRaw) {
           const quota = parseInt(quotaRaw);
           if (!isNaN(quota)) {
             const roleRef = doc(collection(db, `users/${userId}/roles`));
             batch.set(roleRef, {
-              name,
+              name: name.trim(),
               quota,
-              description: description || '',
-              reward: reward || '',
+              description: (description || '').trim(),
+              reward: (reward || '').trim(),
               applicantCount: 0
             });
             count++;
