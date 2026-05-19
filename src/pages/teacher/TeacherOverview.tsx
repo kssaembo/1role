@@ -25,7 +25,21 @@ export default function TeacherOverview({
 }) {
   const [copied, setCopied] = useState(false);
   
-  const studentLink = `${window.location.origin}/student/apply/${teacher?.id}`;
+  const getBaseUrl = () => {
+    // If the hostname matches vercel or we are in a production-like environment, 
+    // we use the provided vercel URL. Otherwise, use origin.
+    const isVercel = window.location.hostname.includes('vercel.app');
+    const isLocal = window.location.hostname === 'localhost';
+    
+    // If user is accessing from AI Studio preview or local, but wants to share the production link
+    if (isLocal || window.location.hostname.includes('asia-northeast1.run.app')) {
+      return 'https://1role.vercel.app';
+    }
+    
+    return window.location.origin;
+  };
+
+  const studentLink = `${getBaseUrl()}/student/apply/${teacher?.id}`;
 
   const copyLink = () => {
     navigator.clipboard.writeText(studentLink);
